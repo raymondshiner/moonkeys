@@ -242,7 +242,7 @@ class QmkView(Gtk.Box):
         self.label_hint.get_style_context().add_class('xref')
         box.pack_start(self.label_hint, False, False, 0)
 
-        box.pack_start(self._slot_header('Tap  — search a hotkey or keycode'),
+        box.pack_start(self._slot_header('Tap — hotkey or keycode'),
                        False, False, 0)
         self.tap_entry = self._assign_entry()
         self.tap_entry.connect('changed', self._on_slot_changed)
@@ -253,13 +253,13 @@ class QmkView(Gtk.Box):
         self.xref.set_max_width_chars(36)
         box.pack_start(self.xref, False, False, 0)
 
-        box.pack_start(self._slot_header('Double-tap'), False, False, 0)
+        box.pack_start(self._slot_header('Double-tap — optional'), False, False, 0)
         self.dbl_entry = self._assign_entry()
         self.dbl_entry.set_placeholder_text('— none —')
         self.dbl_entry.connect('changed', self._on_slot_changed)
         box.pack_start(self.dbl_entry, False, False, 0)
 
-        box.pack_start(self._slot_header('Hold'), False, False, 0)
+        box.pack_start(self._slot_header('Hold — layer or modifier'), False, False, 0)
         self.hold_combo = Gtk.ComboBoxText()
         for label, _val in HOLD_OPTIONS:
             self.hold_combo.append_text(label)
@@ -440,8 +440,7 @@ class QmkView(Gtk.Box):
     def _load_drawer(self, pos):
         self._block_drawer = True
         slots = self.cur_slots(pos)
-        led = q.LED_BY_LAYOUT[pos]
-        self.d_title.set_text(f'pos {pos} · LED {led}')
+        self.d_title.set_text(self.key_label(slots) or f'Key {pos}')
         self.label_entry.set_text(self.key_label(slots))
         self.tap_entry.set_text(self._kc_to_field(slots.get('tap')))
         self.dbl_entry.set_text(self._kc_to_field(slots.get('double')))
@@ -601,6 +600,14 @@ class QmkView(Gtk.Box):
         self._notify_count()
         self.toast(f'Saved {n} edit(s), committed.')
         self._flash_gate(parent)
+
+    def flash(self, parent):
+        """Header Flash button: save pending edits first (that flow ends in the
+        gate), otherwise flash what's already committed to keymap.c."""
+        if self.n_edits() > 0:
+            self.save(parent)
+        else:
+            self._flash_gate(parent)
 
     def _flash_gate(self, parent):
         dlg = Gtk.MessageDialog(

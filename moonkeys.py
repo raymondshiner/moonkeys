@@ -76,6 +76,13 @@ window {{ background: transparent; }}
     border: none; box-shadow: none; text-shadow: none;
 }}
 .save-btn:disabled {{ background-color: {BG_ELEV}; color: {MUTED}; }}
+.flash-btn {{
+    background-color: {PURPLE}; color: {BG};
+    border-radius: 8px; padding: 6px 14px;
+    font-family: "JetBrainsMono Nerd Font"; font-size: 12px; font-weight: bold;
+    border: none; box-shadow: none; text-shadow: none;
+}}
+.flash-btn:hover {{ box-shadow: 0 0 10px {PURPLE}; }}
 .close-btn {{
     background: transparent; color: {MUTED}; border: none; padding: 2px 8px;
     font-family: "JetBrainsMono Nerd Font"; font-size: 16px;
@@ -188,6 +195,11 @@ class MoonKeys(Gtk.Window):
         self.toast_lbl = Gtk.Label(label='')
         self.toast_lbl.get_style_context().add_class('toast')
         header.pack_start(self.toast_lbl, False, False, 0)
+        self.flash_btn = Gtk.Button(label=' Flash')
+        self.flash_btn.get_style_context().add_class('flash-btn')
+        self.flash_btn.set_tooltip_text('Compile + flash the Moonlander firmware')
+        self.flash_btn.connect('clicked', lambda _b: self.qmk.flash(self))
+        header.pack_start(self.flash_btn, False, False, 0)
         self.save_btn = Gtk.Button(label='Save 0 changes')
         self.save_btn.get_style_context().add_class('save-btn')
         self.save_btn.set_sensitive(False)
@@ -255,6 +267,7 @@ class MoonKeys(Gtk.Window):
         for m, btn in self.mode_chips.items():
             ctx = btn.get_style_context()
             (ctx.add_class if m == mode else ctx.remove_class)('active')
+        self.flash_btn.set_visible(mode == 'keyboard')
         self._update_subtitle()
         self._refresh_save_btn()
         if mode == 'hotkeys':
